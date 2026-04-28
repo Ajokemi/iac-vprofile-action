@@ -103,4 +103,22 @@ jobs:
           name: vprofile-stack
           values: appimage=${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }},apptag=${{ github.run_number }}
 
+      - name: Diagnose deployment
+        if: always()    # run even if previous steps failed
+        run: |
+          echo "=== Pods ==="
+          kubectl get pods -A
+          echo ""
+          echo "=== Services ==="
+          kubectl get svc -A
+          echo ""
+          echo "=== Ingresses ==="
+          kubectl get ingress -A
+          echo ""
+          echo "=== Pod details (vproapp) ==="
+          kubectl describe pod -l app=vproapp
+          echo ""
+          echo "=== Ingress controller pods ==="
+          kubectl get pods -n ingress-nginx
+
 
