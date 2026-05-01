@@ -45,7 +45,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Login to Amazon ECR
         id: ecr-login
@@ -72,7 +72,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Get full EKS cluster name
         id: cluster
@@ -100,13 +100,12 @@ jobs:
       - name: Deploy with Helm
         uses: bitovi/github-actions-deploy-eks-helm@v1.2.10
         with:
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
           cluster-name: ${{ steps.cluster.outputs.name }}
           chart-path: helm/vprofilecharts
           namespace: default
           name: vprofile-stack
-          values: appimage=${{ steps.ecr-login-deploy.outputs.registry }}/${{ env.ECR_REPOSITORY }},apptag=${{ github.run_number }}
-
+          values: appimage=${{ steps.ecr-login-deploy.outputs.registry }}/vprofileapp,apptag=${{ github.run_number }}
       - name: Print app URL
         if: success()
         run: |
