@@ -112,6 +112,19 @@ jobs:
       - name: Print app URL
         if: success()
         run: |
-          echo "Waiting for load balancer..."
-          sleep 60
-          kubectl get ingress -A
+          echo "Waiting for Load Balancer to provision..."
+          # This loop checks every 10 seconds for the URL
+          for i in {1..20}; do
+            URL=$(kubectl get ingress -n default -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            if [ -n "$URL" ]; then
+              echo ""
+              echo "=================================================="
+              echo "APP IS LIVE AT: http://$URL"
+              echo "=================================================="
+              exit 0
+            fi
+            echo "Still waiting for AWS to assign a DNS name... (Attempt $i/20)"
+            sleep 10
+          done
+          echo "Load balancer taking longer than usual. Check the AWS EC2 Console."
+          
