@@ -41,10 +41,11 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::541673202339:role/github-actions-role
+          role-session-name: GitHub_to_AWS_via_FederatedToken
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -68,10 +69,11 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::541673202339:role/github-actions-role
+          role-session-name: GitHub_to_AWS_via_FederatedToken
           aws-region: us-east-1
 
       - name: Get full EKS cluster name
@@ -106,6 +108,7 @@ jobs:
           namespace: default
           name: vprofile-stack
           values: appimage=${{ steps.ecr-login-deploy.outputs.registry }}/vprofileapp,apptag=${{ github.run_number }}
+          
       - name: Print app URL
         if: success()
         run: |
