@@ -107,24 +107,32 @@ jobs:
           chart-path: helm/vprofilecharts
           namespace: default
           name: vprofile-stack
+          update-deps: true 
           values: appimage=${{ steps.ecr-login-deploy.outputs.registry }}/vprofileapp,apptag=${{ github.run_number }}
           
       - name: Print app URL
         if: success()
         run: |
-          echo "Waiting for Load Balancer to provision..."
-          # This loop checks every 10 seconds for the URL
-          for i in {1..20}; do
-            URL=$(kubectl get ingress -n default -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+          echo "Waiting for Load Balancer DNS..."
+          for i in {1..30}; do
+            # 1. Try finding by the specific Nginx label
+            URL=$(kubectl get svc -A -l app.kubernetes.io/component=controller -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            
+            # 2. Fallback: If empty, grab any LoadBalancer service in the cluster
+            if [ -z "$URL" ]; then
+              URL=$(kubectl get svc -A --field-selector type=LoadBalancer -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            fi
+
             if [ -n "$URL" ]; then
               echo ""
               echo "=================================================="
-              echo "APP IS LIVE AT: http://$URL"
+              echo "✅ PROJECT DEPLOYED SUCCESSFULLY!"
+              echo "URL: http://$URL"
               echo "=================================================="
               exit 0
             fi
-            echo "Still waiting for AWS to assign a DNS name... (Attempt $i/20)"
+            echo "Attempt $i/30: Still waiting for AWS... (10s)"
             sleep 10
           done
-          echo "Load balancer taking longer than usual. Check the AWS EC2 Console."
+          echo "Timed out. Check EC2 > Load Balancers in AWS Console."
           
