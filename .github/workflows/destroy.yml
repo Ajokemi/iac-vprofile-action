@@ -1,0 +1,35 @@
+name: "Vprofile IAC Destroy"
+ 
+on:
+  workflow_dispatch:
+ 
+permissions:
+  id-token: write
+  contents: read
+ 
+env:
+  AWS_REGION:      ${{ secrets.AWS_REGION }}
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
+ 
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:     ${{ env.AWS_REGION }}
+ 
+      - uses: hashicorp/setup-terraform@v3
+ 
+      - name: Terraform init
+        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+ 
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve -input=false
